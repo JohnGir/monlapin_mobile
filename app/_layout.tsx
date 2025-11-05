@@ -9,16 +9,16 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/components/useColorScheme';
 
 export {
-  // Catch any errors thrown by the Layout component.
+  // Permet d’intercepter les erreurs globales
   ErrorBoundary,
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
+  // Définit l’écran de démarrage sur les tabs
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// On empêche le SplashScreen de disparaître avant le chargement complet
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -27,11 +27,12 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  // S’il y a une erreur de chargement des polices, on la lève
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
+  // Quand tout est chargé, on masque le SplashScreen
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
@@ -39,20 +40,29 @@ export default function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    return null;
+    return null; // Rien n’est affiché tant que les polices ne sont pas prêtes
   }
 
   return <RootLayoutNav />;
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme(); // light ou dark selon le téléphone
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        {/* Le dossier (tabs) contient les écrans principaux (Home, Panier, Profil) */}
+        <Stack.Screen
+          name="(tabs)"
+          options={{ headerShown: false }}
+        />
+
+        {/* Pour les écrans modaux (par ex : détails produit, confirmation achat, etc.) */}
+        <Stack.Screen
+          name="modal"
+          options={{ presentation: 'modal', headerShown: false }}
+        />
       </Stack>
     </ThemeProvider>
   );

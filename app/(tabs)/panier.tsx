@@ -33,7 +33,11 @@ export default function PanierScreen() {
   const total = articles.reduce((sum, a) => sum + a.prix * a.quantite, 0);
 
   const payerAvecWave = () => {
+<<<<<<< HEAD
     Linking.openURL("https://pay.wave.com/m/M_ci_tV5-aaKPMXQ9/c/ci/");
+=======
+    Linking.openURL("https://pay.wave.com/m/M_ci_iJFSXYACg9DX/c/ci/");
+>>>>>>> 9eb2834 (Initial commit)
   };
 
   const renderItem = ({ item }: { item: Article }) => (

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+/* import React, { useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Linking } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -33,11 +33,7 @@ export default function PanierScreen() {
   const total = articles.reduce((sum, a) => sum + a.prix * a.quantite, 0);
 
   const payerAvecWave = () => {
-<<<<<<< HEAD
     Linking.openURL("https://pay.wave.com/m/M_ci_tV5-aaKPMXQ9/c/ci/");
-=======
-    Linking.openURL("https://pay.wave.com/m/M_ci_iJFSXYACg9DX/c/ci/");
->>>>>>> 9eb2834 (Initial commit)
   };
 
   const renderItem = ({ item }: { item: Article }) => (
@@ -92,3 +88,76 @@ const styles = StyleSheet.create({
   bouton: { backgroundColor: "#007bff", padding: 12, borderRadius: 8 },
   boutonTexte: { color: "#fff", textAlign: "center", fontWeight: "bold" },
 });
+ */
+
+import React from "react";
+import { View, Text, Image, TouchableOpacity, FlatList } from "react-native";
+import { useCartStore } from "../../src/store/cart";
+
+export default function CartScreen() {
+  const { items, removeFromCart, increaseQuantity, decreaseQuantity, totalPrice } = useCartStore();
+
+  return (
+    <View style={{ flex: 1, padding: 20 }}>
+      {items.length === 0 ? (
+        <Text style={{ textAlign: "center", marginTop: 50, fontSize: 18 }}>
+          Votre panier est vide
+        </Text>
+      ) : (
+        <>
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginBottom: 20,
+                  alignItems: "center",
+                }}
+              >
+                <Image
+                  source={{ uri: item.image }}
+                  style={{ width: 60, height: 60, borderRadius: 8 }}
+                />
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>{item.name}</Text>
+                  <Text>Prix: {item.price} FCFA</Text>
+                  <View style={{ flexDirection: "row", marginTop: 5 }}>
+                    <TouchableOpacity onPress={() => decreaseQuantity(item.id)} style={{ marginRight: 10 }}>
+                      <Text style={{ fontSize: 18 }}>➖</Text>
+                    </TouchableOpacity>
+                    <Text>{item.quantity}</Text>
+                    <TouchableOpacity onPress={() => increaseQuantity(item.id)} style={{ marginLeft: 10 }}>
+                      <Text style={{ fontSize: 18 }}>➕</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => removeFromCart(item.id)}>
+                  <Text style={{ color: "red", fontWeight: "bold" }}>Supprimer</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+
+          <View style={{ marginTop: 20 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+              Total: {totalPrice()} FCFA
+            </Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#00A86B",
+                padding: 14,
+                borderRadius: 10,
+                alignItems: "center",
+                marginTop: 15,
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 16 }}>Valider la commande</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+    </View>
+  );
+}

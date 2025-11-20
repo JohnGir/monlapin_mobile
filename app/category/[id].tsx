@@ -13,7 +13,7 @@ type Category = {
 };
 
 export default function CategoryDetails() {
-  const { id } = useLocalSearchParams();
+  const { id, name } = useLocalSearchParams<{ id?: string; name?: string }>();
 
   // convertir id → string
   const categoryId = Array.isArray(id) ? id[0] : id;
@@ -56,6 +56,7 @@ export default function CategoryDetails() {
       <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 10 }}>
         {category.name}
       </Text>
+      <Text style={{ fontSize: 28, fontWeight: "bold" }}>111{name}111s</Text>
 
       <TouchableOpacity
         onPress={handleAddToCart}

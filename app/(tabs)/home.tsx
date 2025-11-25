@@ -174,7 +174,7 @@ export default function HomeScreen() {
       {/* LOGO */}
       <View style={{ alignItems: "center", paddingTop: 40, paddingBottom: 10 }}>
         <Image
-          source={require("../../assets/logo.jpg")}
+          source={require("../../assets/mlcilogo.png")}
           style={{ width: 120, height: 60, resizeMode: "contain" }}
         />
       </View>

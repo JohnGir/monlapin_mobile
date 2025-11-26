@@ -1,3 +1,4 @@
+// app/(tabs)/home.tsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -43,80 +44,34 @@ export default function HomeScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [loginLoading, setLoginLoading] = useState(true);
 
   const router = useRouter();
-  const token = useAuthStore((state) => state.token);
-  const setToken = useAuthStore((state) => state.setToken);
-  const { colors } = useTheme(); // ⬅️ UTILISATION DU THÈME
+  const { token, loginLoading } = useAuthStore();
+  const { colors } = useTheme();
 
-  // --- 1️⃣ LOGIN AUTOMATIQUE ---
-  useEffect(() => {
-    async function autoLogin() {
-      try {
-        console.log("🔐 Tentative de login automatique...");
-        setLoginLoading(true);
-
-        const res = await login(AUTO_EMAIL, AUTO_PASSWORD);
-        console.log("✅ Réponse login:", res);
-
-        if (res.success && res.token) {
-          setToken(res.token);
-          console.log("🔑 Token stocké avec succès");
-        } else {
-          console.log("❌ Login auto échoué - Pas de token reçu");
-          setError("Échec de la connexion automatique");
-        }
-      } catch (err: any) {
-        console.log("❌ Erreur login auto:", err.message);
-        setError("Erreur de connexion: " + err.message);
-      } finally {
-        setLoginLoading(false);
-      }
-    }
-
-    // Seulement si pas déjà de token
-    if (!token) {
-      autoLogin();
-    } else {
-      setLoginLoading(false);
-      console.log("🔑 Token déjà présent, pas besoin de login auto");
-    }
-  }, []);
-
-  // --- 2️⃣ Charger catégories API ---
+  // --- Charger catégories API après login global ---
   useEffect(() => {
     async function loadCategories() {
-      // Attendre que le login soit terminé
-      if (loginLoading) {
-        console.log("⏳ En attente du login...");
-        return;
-      }
+      if (loginLoading) return; // attendre que autoLogin du layout se termine
 
       if (!token) {
-        console.log("❌ Pas de token disponible pour charger les catégories");
         setError("Connexion requise");
         setLoading(false);
         return;
       }
 
       try {
-        console.log("📡 Chargement des catégories...");
         setLoading(true);
         setError(null);
 
         const data = await fetchCategories(token);
-        console.log("📦 Données catégories reçues:", data);
 
         if (data.success && data.data) {
           setCategories(data.data);
-          console.log(`✅ ${data.data.length} catégories chargées`);
         } else {
-          console.log("❌ Aucune catégorie trouvée dans la réponse");
           setError("Aucune catégorie disponible");
         }
       } catch (err: any) {
-        console.log("❌ Erreur chargement catégories:", err.message);
         setError("Erreur de chargement des catégories");
       } finally {
         setLoading(false);
@@ -127,12 +82,8 @@ export default function HomeScreen() {
   }, [token, loginLoading]);
 
   const getImageUrl = (imagePath: string) => {
-    if (!imagePath) {
-      return "https://via.placeholder.com/150x120?text=No+Image";
-    }
-    if (imagePath.startsWith("http")) {
-      return imagePath;
-    }
+    if (!imagePath) return "https://via.placeholder.com/150x120?text=No+Image";
+    if (imagePath.startsWith("http")) return imagePath;
     return `https://api.monlapinci.com${imagePath}`;
   };
 

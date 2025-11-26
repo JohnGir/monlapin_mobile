@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { ThemeProvider } from '../src/theme/ThemeProvider'; // ⬅️ IMPORT DE VOTRE THEME
+import { useAuthStore } from '@/src/store/auth';
 
 export {
   // Permet d'intercepter les erreurs globales
@@ -76,6 +77,11 @@ const CustomDarkTheme = {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme(); // light ou dark selon le téléphone
+  const autoLogin = useAuthStore((state) => state.autoLogin);
+
+  useEffect(() => {
+    autoLogin();
+  }, []);
 
   return (
     <ThemeProvider> {/* ⬅️ VOTRE THEME PROVIDER */}

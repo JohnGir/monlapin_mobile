@@ -49,7 +49,9 @@ export default function CartScreen() {
     clearCart,
   } = useCartStore();
 
-  const { user, token } = useAuthStore();
+  const { token, user } = useAuthStore();
+  console.log("🔑 Token utilisateur dans le panier :", token);
+  console.log("👤 Utilisateur dans le panier :", user);
   const { colors } = useTheme();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -74,7 +76,7 @@ export default function CartScreen() {
       return;
     }
 
-    if (!user || !token) {
+    if (!token) {
       Alert.alert(
         "Connexion requise",
         "Veuillez vous connecter pour passer une commande."
@@ -86,7 +88,7 @@ export default function CartScreen() {
 
     try {
       const orderData = {
-        items: items.map((item) => ({
+        items: items.map((item: { id: any; name: any; price: any; quantity: any; image?: any; }) => ({
           lapinId: item.id,
           name: item.name,
           price: item.price,
@@ -494,7 +496,7 @@ export default function CartScreen() {
             >
               Livraison disponible dans le Grand Abidjan.
               {"\n"}
-              Les commandes passées après 18h peuvent être livrées le lendemain.
+              Les commandes passées après 18h peuvent être livrées le landemain.
             </Text>
           </View>
         </>

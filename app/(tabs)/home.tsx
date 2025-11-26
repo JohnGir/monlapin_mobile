@@ -15,6 +15,8 @@ import { Link, useRouter } from "expo-router";
 import { fetchCategories } from "../../src/api/categories";
 import { login } from "../../src/api/auth";
 import { useAuthStore } from "../../src/store/auth";
+import { useTheme } from "../../src/theme/ThemeProvider";
+import { globalStyles } from "../../src/theme/globalStyles";
 
 // 🔐 Identifiants en dur TEMPORAIRES
 const AUTO_EMAIL = "eleveur.bouafle@test.com";
@@ -23,7 +25,7 @@ const AUTO_PASSWORD = "123456";
 const { width } = Dimensions.get("window");
 
 const ads = [
-  { id: "1", image: require("../../assets/ad1.jpeg") },
+  { id: "1", image: require("../../assets/barner.png") },
   { id: "2", image: require("../../assets/ad2.jpeg") },
   { id: "3", image: require("../../assets/ad3.jpg") },
 ];
@@ -42,10 +44,11 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(true);
-  
+
   const router = useRouter();
   const token = useAuthStore((state) => state.token);
   const setToken = useAuthStore((state) => state.setToken);
+  const { colors } = useTheme(); // ⬅️ UTILISATION DU THÈME
 
   // --- 1️⃣ LOGIN AUTOMATIQUE ---
   useEffect(() => {
@@ -53,10 +56,10 @@ export default function HomeScreen() {
       try {
         console.log("🔐 Tentative de login automatique...");
         setLoginLoading(true);
-        
+
         const res = await login(AUTO_EMAIL, AUTO_PASSWORD);
         console.log("✅ Réponse login:", res);
-        
+
         if (res.success && res.token) {
           setToken(res.token);
           console.log("🔑 Token stocké avec succès");
@@ -101,10 +104,10 @@ export default function HomeScreen() {
         console.log("📡 Chargement des catégories...");
         setLoading(true);
         setError(null);
-        
+
         const data = await fetchCategories(token);
         console.log("📦 Données catégories reçues:", data);
-        
+
         if (data.success && data.data) {
           setCategories(data.data);
           console.log(`✅ ${data.data.length} catégories chargées`);
@@ -162,15 +165,17 @@ export default function HomeScreen() {
   // Afficher le loading principal
   if (loginLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
-        <ActivityIndicator size="large" color="#00A86B" />
-        <Text style={{ marginTop: 10, color: "#666" }}>Connexion en cours...</Text>
+      <View style={[globalStyles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[globalStyles.body, { marginTop: 10, color: colors.text.secondary }]}>
+          Connexion en cours...
+        </Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <ScrollView style={globalStyles.container}>
       {/* LOGO */}
       <View style={{ alignItems: "center", paddingTop: 40, paddingBottom: 10 }}>
         <Image
@@ -193,36 +198,41 @@ export default function HomeScreen() {
           style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: "#f1f1f1",
+            backgroundColor: colors.gray[100],
             borderRadius: 10,
             paddingHorizontal: 10,
             flex: 1,
             marginRight: 10,
           }}
         >
-          <Ionicons name="search" size={20} color="#777" />
+          <Ionicons name="search" size={20} color={colors.gray[500]} />
           <TextInput
             placeholder="Rechercher un produit..."
             value={search}
             onChangeText={setSearch}
-            style={{ flex: 1, marginLeft: 8, paddingVertical: 8 }}
-            placeholderTextColor="#999"
+            style={{
+              flex: 1,
+              marginLeft: 8,
+              paddingVertical: 8,
+              color: colors.text.primary,
+            }}
+            placeholderTextColor={colors.gray[500]}
           />
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={{ padding: 6 }}
           onPress={() => Alert.alert("Notifications", "Fonctionnalité à venir!")}
         >
-          <Ionicons name="notifications-outline" size={24} color="#333" />
+          <Ionicons name="notifications-outline" size={24} color={colors.text.primary} />
         </TouchableOpacity>
       </View>
 
       {/* CARROUSEL */}
       <View style={{ marginBottom: 25 }}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
           pagingEnabled
           style={{ marginBottom: 10 }}
         >
@@ -243,32 +253,53 @@ export default function HomeScreen() {
 
       {/* CATEGORIES */}
       <View style={{ paddingHorizontal: 20, marginBottom: 30 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
-          <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+        {/* TITRE */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 15,
+          }}
+        >
+          <Text style={[{ fontSize: 20, fontWeight: "bold", color: colors.text.primary }]}>
             Catégories de lapins
           </Text>
+
           {categories.length > 0 && (
-            <Text style={{ color: "#666", fontSize: 14 }}>
+            <Text style={{ color: colors.text.secondary, fontSize: 14 }}>
               {categories.length} catégorie(s)
             </Text>
           )}
         </View>
 
+        {/* LOADING */}
         {loading ? (
           <View style={{ alignItems: "center", paddingVertical: 40 }}>
-            <ActivityIndicator size="large" color="#00A86B" />
-            <Text style={{ marginTop: 10, color: "#666" }}>Chargement des catégories...</Text>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={{ marginTop: 10, color: colors.text.secondary }}>
+              Chargement des catégories...
+            </Text>
           </View>
         ) : error ? (
+          // ERREUR
           <View style={{ alignItems: "center", paddingVertical: 40 }}>
-            <Ionicons name="alert-circle-outline" size={48} color="#ff6b6b" />
-            <Text style={{ textAlign: "center", color: "#ff6b6b", marginTop: 10, marginBottom: 15 }}>
+            <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
+            <Text
+              style={{
+                textAlign: "center",
+                color: colors.error,
+                marginTop: 10,
+                marginBottom: 15,
+              }}
+            >
               {error}
             </Text>
+
             <TouchableOpacity
               onPress={handleRetry}
               style={{
-                backgroundColor: "#00A86B",
+                backgroundColor: colors.primary,
                 paddingHorizontal: 20,
                 paddingVertical: 10,
                 borderRadius: 8,
@@ -278,13 +309,15 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         ) : categories.length === 0 ? (
+          // AUCUNE CATÉGORIE
           <View style={{ alignItems: "center", paddingVertical: 40 }}>
-            <Ionicons name="folder-open-outline" size={48} color="#999" />
-            <Text style={{ textAlign: "center", color: "#999", marginTop: 10 }}>
+            <Ionicons name="folder-open-outline" size={48} color={colors.gray[400]} />
+            <Text style={{ textAlign: "center", color: colors.gray[500], marginTop: 10 }}>
               Aucune catégorie disponible
             </Text>
           </View>
         ) : (
+          // LISTE DES CATÉGORIES
           <View
             style={{
               flexDirection: "row",
@@ -311,13 +344,16 @@ export default function HomeScreen() {
               >
                 <Image
                   source={{ uri: getImageUrl(item.image) }}
-                  style={{ 
-                    width: "100%", 
+                  style={{
+                    width: "100%",
                     height: 120,
-                    backgroundColor: "#f0f0f0"
+                    backgroundColor: "#f0f0f0",
                   }}
-                  onError={() => console.log("Erreur image catégorie:", item.name)}
+                  onError={() =>
+                    console.log("Erreur image catégorie:", item.name)
+                  }
                 />
+
                 <View style={{ padding: 12 }}>
                   <Text
                     style={{
@@ -325,27 +361,30 @@ export default function HomeScreen() {
                       fontWeight: "600",
                       fontSize: 14,
                       marginBottom: 4,
+                      color: colors.text.primary,
                     }}
                     numberOfLines={1}
                   >
                     {item.name}
                   </Text>
+
                   <Text
                     style={{
                       textAlign: "center",
                       fontSize: 12,
-                      color: "#666",
+                      color: colors.text.secondary,
                       marginBottom: 6,
                     }}
                     numberOfLines={2}
                   >
                     {item.description}
                   </Text>
+
                   <Text
                     style={{
                       textAlign: "center",
                       fontSize: 11,
-                      color: "#00A86B",
+                      color: colors.accent,
                       fontWeight: "500",
                     }}
                   >
@@ -357,6 +396,8 @@ export default function HomeScreen() {
           </View>
         )}
       </View>
+
+
 
       {/* BOUTON POUR TESTER */}
       <View style={{ paddingHorizontal: 20, marginBottom: 30 }}>
@@ -370,13 +411,13 @@ export default function HomeScreen() {
             );
           }}
           style={{
-            backgroundColor: "#f0f0f0",
+            backgroundColor: colors.gray[100],
             padding: 12,
             borderRadius: 10,
             alignItems: "center",
           }}
         >
-          <Text style={{ color: "#666", fontSize: 12 }}>ℹ️ Info Débug</Text>
+          <Text style={{ color: colors.gray[600], fontSize: 12 }}>ℹ️ Info Débug</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

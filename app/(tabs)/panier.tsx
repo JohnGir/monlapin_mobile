@@ -1,160 +1,252 @@
-/* import React, { useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Linking } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-
-type Article = {
-  id: string;
-  nom: string;
-  prix: number;
-  quantite: number;
-  image: any;
-};
-
-export default function PanierScreen() {
-  const [articles, setArticles] = useState<Article[]>([
-    { id: "1", nom: "Lapin Blanc", prix: 5000, quantite: 1, image: require("../../assets/live.jpeg") },
-    { id: "2", nom: "Lapin Marron", prix: 6000, quantite: 1, image: require("../../assets/live.jpeg") },
-  ]);
-
-  const increment = (id: string) => {
-    setArticles((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, quantite: a.quantite + 1 } : a))
-    );
-  };
-
-  const decrement = (id: string) => {
-    setArticles((prev) =>
-      prev.map((a) =>
-        a.id === id && a.quantite > 1 ? { ...a, quantite: a.quantite - 1 } : a
-      )
-    );
-  };
-
-  const total = articles.reduce((sum, a) => sum + a.prix * a.quantite, 0);
-
-  const payerAvecWave = () => {
-    Linking.openURL("https://pay.wave.com/m/M_ci_tV5-aaKPMXQ9/c/ci/");
-  };
-
-  const renderItem = ({ item }: { item: Article }) => (
-    <View style={styles.item}>
-      <Image source={item.image} style={styles.image} />
-      <View style={{ flex: 1, marginLeft: 10 }}>
-        <Text style={styles.nom}>{item.nom}</Text>
-        <Text style={styles.prix}>{item.prix} FCFA</Text>
-      </View>
-      <View style={styles.quantiteContainer}>
-        <TouchableOpacity onPress={() => decrement(item.id)}>
-          <Ionicons name="remove-circle-outline" size={24} color="#007bff" />
-        </TouchableOpacity>
-        <Text style={styles.quantite}>{item.quantite}</Text>
-        <TouchableOpacity onPress={() => increment(item.id)}>
-          <Ionicons name="add-circle-outline" size={24} color="#007bff" />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.titre}>🛒 Mon Panier</Text>
-
-      <FlatList
-        data={articles}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      />
-
-      <Text style={styles.total}>Total : {total} FCFA</Text>
-
-      <TouchableOpacity style={styles.bouton} onPress={payerAvecWave}>
-        <Text style={styles.boutonTexte}>Payer avec Wave</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9f9f9", padding: 15 },
-  titre: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 15,  marginTop: 20, },
-  item: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", padding: 10, marginBottom: 10, borderRadius: 10, elevation: 2 },
-  image: { width: 80, height: 80, borderRadius: 10 },
-  nom: { fontSize: 16, fontWeight: "600" },
-  prix: { fontSize: 14, fontWeight: "bold", color: "#007bff" },
-  quantiteContainer: { flexDirection: "row", alignItems: "center" },
-  quantite: { marginHorizontal: 10, fontSize: 16 },
-  total: { fontSize: 18, fontWeight: "bold", marginVertical: 15, textAlign: "center" },
-  bouton: { backgroundColor: "#007bff", padding: 12, borderRadius: 8 },
-  boutonTexte: { color: "#fff", textAlign: "center", fontWeight: "bold" },
-});
- */
 
 import React from "react";
 import { View, Text, Image, TouchableOpacity, FlatList } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useCartStore } from "../../src/store/cart";
+import { useTheme } from "../../src/theme/ThemeProvider";
+import { globalStyles } from "../../src/theme/globalStyles";
 
 export default function CartScreen() {
   const { items, removeFromCart, increaseQuantity, decreaseQuantity, totalPrice } = useCartStore();
+  const { colors } = useTheme(); // ⬅️ UTILISATION DU THÈME
+
+  const formatPrice = (price: number) => {
+    return price.toLocaleString('fr-FR') + ' FCFA';
+  };
+
+  const getImageUrl = (imagePath?: string): string => {
+    if (!imagePath) {
+      return "https://via.placeholder.com/60x60?text=No+Image";
+    }
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+    return `https://api.monlapinci.com${imagePath}`;
+  };
 
   return (
-    <View style={{ flex: 1, padding: 20 }}>
-      {items.length === 0 ? (
-        <Text style={{ textAlign: "center", marginTop: 50, fontSize: 18 }}>
-          Votre panier est vide
+    <View style={globalStyles.container}>
+      {/* En-tête du panier */}
+      <View style={{ paddingHorizontal: 20, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: colors.border.light }}>
+        <Text style={[globalStyles.title, { color: colors.text.primary }]}>
+          Mon Panier
         </Text>
+        <Text style={[globalStyles.caption, { color: colors.text.secondary, marginTop: 4 }]}>
+          {items.length} article(s)
+        </Text>
+      </View>
+
+      {items.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40 }}>
+          <Ionicons name="cart-outline" size={64} color={colors.gray[400]} />
+          <Text style={[globalStyles.subtitle, {
+            textAlign: "center",
+            marginTop: 20,
+            marginBottom: 10,
+            color: colors.text.primary
+          }]}>
+            Votre panier est vide
+          </Text>
+          <Text style={[globalStyles.caption, {
+            textAlign: "center",
+            color: colors.text.secondary
+          }]}>
+            Ajoutez des produits depuis les catégories pour les voir apparaître ici
+          </Text>
+        </View>
       ) : (
         <>
           <FlatList
             data={items}
             keyExtractor={(item) => item.id}
+            contentContainerStyle={{ padding: 20 }}
+            showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
-              <View
-                style={{
-                  flexDirection: "row",
-                  marginBottom: 20,
-                  alignItems: "center",
-                }}
-              >
+              <View style={[globalStyles.card, {
+                flexDirection: "row",
+                marginBottom: 16,
+                alignItems: "center",
+              }]}>
+                {/* Image du produit */}
                 <Image
-                  source={{ uri: item.image }}
-                  style={{ width: 60, height: 60, borderRadius: 8 }}
+                  source={{ uri: getImageUrl(item.image) }}
+                  style={{
+                    width: 70,
+                    height: 70,
+                    borderRadius: 8,
+                    backgroundColor: colors.gray[200]
+                  }}
                 />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>{item.name}</Text>
-                  <Text>Prix: {item.price} FCFA</Text>
-                  <View style={{ flexDirection: "row", marginTop: 5 }}>
-                    <TouchableOpacity onPress={() => decreaseQuantity(item.id)} style={{ marginRight: 10 }}>
-                      <Text style={{ fontSize: 18 }}>➖</Text>
-                    </TouchableOpacity>
-                    <Text>{item.quantity}</Text>
-                    <TouchableOpacity onPress={() => increaseQuantity(item.id)} style={{ marginLeft: 10 }}>
-                      <Text style={{ fontSize: 18 }}>➕</Text>
-                    </TouchableOpacity>
+
+                {/* Informations du produit */}
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={[globalStyles.body, {
+                    fontWeight: "600",
+                    color: colors.text.primary,
+                    marginBottom: 4
+                  }]}>
+                    {item.name}
+                  </Text>
+                  <Text style={[globalStyles.caption, {
+                    color: colors.text.secondary,
+                    marginBottom: 8
+                  }]}>
+                    {formatPrice(item.price)}
+                  </Text>
+
+                  {/* Contrôle de quantité */}
+                  <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <TouchableOpacity
+                        onPress={() => decreaseQuantity(item.id)}
+                        style={{
+                          backgroundColor: colors.gray[100],
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Ionicons name="remove" size={16} color={colors.text.primary} />
+                      </TouchableOpacity>
+
+                      <Text style={[globalStyles.body, {
+                        marginHorizontal: 16,
+                        color: colors.text.primary,
+                        fontWeight: "600",
+                        minWidth: 20,
+                        textAlign: "center"
+                      }]}>
+                        {item.quantity}
+                      </Text>
+
+                      <TouchableOpacity
+                        onPress={() => increaseQuantity(item.id)}
+                        style={{
+                          backgroundColor: colors.gray[100],
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Ionicons name="add" size={16} color={colors.text.primary} />
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Prix total pour cet article */}
+                    <Text style={[globalStyles.body, {
+                      fontWeight: "600",
+                      color: colors.primary
+                    }]}>
+                      {formatPrice(item.price * item.quantity)}
+                    </Text>
                   </View>
                 </View>
-                <TouchableOpacity onPress={() => removeFromCart(item.id)}>
-                  <Text style={{ color: "red", fontWeight: "bold" }}>Supprimer</Text>
+
+                {/* Bouton supprimer */}
+                <TouchableOpacity
+                  onPress={() => removeFromCart(item.id)}
+                  style={{
+                    padding: 8,
+                    marginLeft: 8,
+                  }}
+                >
+                  <Ionicons name="trash-outline" size={20} color={colors.error} />
                 </TouchableOpacity>
               </View>
             )}
           />
 
-          <View style={{ marginTop: 20 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-              Total: {totalPrice()} FCFA
-            </Text>
+          {/* Résumé et validation */}
+          <View style={{
+            padding: 20,
+            borderTopWidth: 1,
+            borderTopColor: colors.border.light,
+            backgroundColor: colors.background.tertiary
+          }}>
+            {/* Sous-total */}
+            <View style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 8
+            }}>
+              <Text style={[globalStyles.body, { color: colors.text.secondary }]}>
+                Sous-total
+              </Text>
+              <Text style={[globalStyles.body, { color: colors.text.primary }]}>
+                {formatPrice(totalPrice())}
+              </Text>
+            </View>
+
+            {/* Livraison */}
+            <View style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 8
+            }}>
+              <Text style={[globalStyles.body, { color: colors.text.secondary }]}>
+                Livraison
+              </Text>
+              <Text style={[globalStyles.body, { color: colors.success }]}>
+                à determiner
+              </Text>
+            </View>
+
+            {/* Séparateur */}
+            <View style={{
+              height: 1,
+              backgroundColor: colors.border.light,
+              marginVertical: 12
+            }} />
+
+            {/* Total */}
+            <View style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 20
+            }}>
+              <Text style={[globalStyles.subtitle, { color: colors.text.primary }]}>
+                Total
+              </Text>
+              <Text style={[globalStyles.subtitle, { color: colors.primary }]}>
+                {formatPrice(totalPrice())}
+              </Text>
+            </View>
+
+            {/* Bouton de validation */}
             <TouchableOpacity
-              style={{
-                backgroundColor: "#00A86B",
-                padding: 14,
-                borderRadius: 10,
-                alignItems: "center",
-                marginTop: 15,
+              style={globalStyles.buttonPrimary}
+              onPress={() => {
+                // TODO: Implémenter la logique de commande
+                console.log("Validation de la commande");
               }}
             >
-              <Text style={{ color: "#fff", fontSize: 16 }}>Valider la commande</Text>
+              <Text style={globalStyles.buttonPrimaryText}>
+                Valider la commande
+              </Text>
             </TouchableOpacity>
+
+            <Text
+              style={[
+                globalStyles.caption,
+                {
+                  textAlign: "center",
+                  marginTop: 12,
+                  color: colors.text.secondary,
+                },
+              ]}
+            >
+              Livraison disponible dans le Grand Abidjan.
+              Les commandes passées après 18h peuvent être livrées le lendemain.
+            </Text>
+
           </View>
         </>
       )}

@@ -21,7 +21,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => set({ user }),
 
   autoLogin: async () => {
-    const AUTO_EMAIL = "eleveur.bouafle@test.com";
+    const AUTO_EMAIL = "giralzoro@gmail.com";
     const AUTO_PASSWORD = "123456";
 
     try {

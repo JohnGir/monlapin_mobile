@@ -7,6 +7,7 @@ import {
   FlatList,
   Alert,
   ActivityIndicator,
+  Linking, // ⬅️ AJOUT IMPORTANT
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCartStore } from "../../src/store/cart";
@@ -68,90 +69,119 @@ export default function CartScreen() {
   };
 
   // =========================
-  // 🔵 Validation de commande
-  // =========================
-  const handleValidateOrder = async () => {
-    if (items.length === 0) {
-      Alert.alert("Panier vide", "Votre panier est vide.");
-      return;
-    }
-
-    if (!token) {
-      Alert.alert(
-        "Connexion requise",
-        "Veuillez vous connecter pour passer une commande."
-      );
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      const orderData = {
-        items: items.map((item: { id: any; name: any; price: any; quantity: any; image?: any; }) => ({
-          lapinId: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image,
-        })),
-        totalAmount: totalPrice(),
-        customerInfo: {
-          userId: user.id,
-          email: user.email,
-          phone: user.phone,
-        },
-        deliveryAddress: {
-          city: "Abidjan",
-          address: "À préciser",
-        },
-      };
-
-      const result = await validateOrder(orderData, token);
-
-      if (result.success) {
-        Alert.alert(
-          "Commande Validée ! 🎉",
-          `Votre commande #${result.data.orderNumber} a été enregistrée.\n\nVous recevrez un email et SMS de confirmation.\n\nTotal: ${formatPrice(
-            totalPrice()
-          )}`,
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                clearCart();
-              },
-            },
-          ]
-        );
-      } else {
-        throw new Error(result.message || "Erreur lors de la validation");
-      }
-    } catch (error: any) {
-      Alert.alert(
-        "Erreur",
-        error.message || "Une erreur est survenue lors de la commande."
-      );
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // =========================
-  // 🔵 Pop-up de confirmation
-  // =========================
-  const confirmOrder = () => {
+// 🔵 OUVERTURE DU LIEN DE PAIEMENT WAVE
+// =========================
+const openPaymentLink = (orderNumber: string, amount: number) => {
+  // 🔗 Lien Wave avec le montant en centimes (Wave nécessite le montant en centimes)
+  const amountInCents = Math.round(amount); // Conversion FCFA en centimes
+  const paymentUrl = `https://pay.wave.com/m/M_ci_iJFSXYACg9DX/c/ci/?amount=${amountInCents}`;
+  
+  console.log("🔗 Ouverture Wave:", paymentUrl);
+  console.log("💰 Montant:", amount, "FCFA →", amountInCents, "centimes");
+  console.log("📦 Commande:", orderNumber);
+  
+  // Ouvrir Wave
+  Linking.openURL(paymentUrl).catch((err) => {
+    console.error("❌ Erreur ouverture Wave:", err);
     Alert.alert(
-      "Confirmer la commande",
-      `Êtes-vous sûr de vouloir valider votre commande pour ${formatPrice(
-        totalPrice()
-      )} ?`,
-      [
-        { text: "Annuler", style: "cancel" },
-        { text: "Confirmer", onPress: handleValidateOrder },
-      ]
+      "Erreur", 
+      "Impossible d'ouvrir Wave. Veuillez installer l'application Wave ou vérifier votre connexion."
     );
-  };
+  });
+};
+
+// =========================
+// 🔵 Validation de commande
+// =========================
+const handleValidateOrder = async () => {
+  if (items.length === 0) {
+    Alert.alert("Panier vide", "Votre panier est vide.");
+    return;
+  }
+
+  if (!token) {
+    Alert.alert(
+      "Connexion requise",
+      "Veuillez vous connecter pour passer une commande."
+    );
+    return;
+  }
+
+  setIsProcessing(true);
+
+  try {
+    const orderData = {
+      items: items.map((item: { id: any; name: any; price: any; quantity: any; image?: any; }) => ({
+        lapinId: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+      })),
+      totalAmount: totalPrice(),
+      customerInfo: {
+        userId: user.id,
+        email: user.email,
+        phone: user.phone,
+      },
+      deliveryAddress: {
+        city: "Abidjan",
+        address: "À préciser",
+      },
+    };
+
+    const result = await validateOrder(orderData, token);
+
+    if (result.success) {
+      // ✅ Commande validée - Ouvrir Wave
+      const orderNumber = result.data.orderNumber;
+      const amount = totalPrice();
+      
+      Alert.alert(
+        "Commande Validée ! 🎉",
+        `Votre commande #${orderNumber} a été enregistrée.\n\nVous allez être redirigé vers Wave pour le paiement de ${formatPrice(amount)}.`,
+        [
+          {
+            text: "Payer avec Wave",
+            onPress: () => {
+              openPaymentLink(orderNumber, amount);
+              clearCart();
+            },
+          },
+        ]
+      );
+    } else {
+      throw new Error(result.message || "Erreur lors de la validation");
+    }
+  } catch (error: any) {
+    Alert.alert(
+      "Erreur",
+      error.message || "Une erreur est survenue lors de la commande."
+    );
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+// =========================
+// 🔵 Pop-up de confirmation AVEC RÉCAP
+// =========================
+const confirmOrder = () => {
+  Alert.alert(
+    "Confirmer la commande",
+    `Récapitulatif de votre commande:\n\n${items.map(item => 
+      `• ${item.name} x${item.quantity} - ${formatPrice(item.price * item.quantity)}`
+    ).join('\n')}\n\nTotal: ${formatPrice(totalPrice())}\n\nSouhaitez-vous procéder au paiement avec Wave ?`,
+    [
+      { text: "Modifier", style: "cancel" },
+      { 
+        text: "Payer avec Wave", 
+        style: "default",
+        onPress: handleValidateOrder 
+      },
+    ]
+  );
+};
 
   return (
     <View style={globalStyles.container}>
@@ -478,7 +508,7 @@ export default function CartScreen() {
                 </View>
               ) : (
                 <Text style={globalStyles.buttonPrimaryText}>
-                  Valider la commande
+                  Valider et Payer
                 </Text>
               )}
             </TouchableOpacity>
@@ -496,7 +526,7 @@ export default function CartScreen() {
             >
               Livraison disponible dans le Grand Abidjan.
               {"\n"}
-              Les commandes passées après 18h peuvent être livrées le landemain.
+              Les commandes passées après 18h peuvent être livrées le lendemain.
             </Text>
           </View>
         </>

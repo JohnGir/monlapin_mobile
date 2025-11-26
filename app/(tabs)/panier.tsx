@@ -86,7 +86,7 @@ export default function CartScreen() {
 
     try {
       const orderData = {
-        items: items.map((item) => ({
+        items: items.map((item: { id: any; name: any; price: any; quantity: any; image: any; }) => ({
           lapinId: item.id,
           name: item.name,
           price: item.price,
